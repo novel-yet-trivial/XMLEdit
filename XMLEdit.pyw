@@ -126,6 +126,11 @@ class FilePicker(tk.Frame):
 
 
 class VerticalScrolledFrame:
+    """
+    A vertically scrolled Frame that can be treated like any other Frame
+    ie it needs a master and layout and it can be a master.
+    keyword arguments are passed to the underlying Canvas (eg width, height)
+    """
     def __init__(self, master, **kwargs):
         self.outer = tk.Frame(master)
 
@@ -139,16 +144,19 @@ class VerticalScrolledFrame:
         self.vsb['command'] = self.canvas.yview
 
         self.inner = tk.Frame(self.canvas)
+        # pack the inner Frame into the Canvas with the topleft corner 4 pixels offset
         self.canvas.create_window(4, 4, window=self.inner, anchor='nw')
         self.inner.bind("<Configure>", self._on_frame_configure)
 
-        # geometry attributes etc (ie destroy) are passed on to self.outer
-        for attr in dir(tk.Widget):
-            setattr(self, attr, getattr(self.outer, attr))
+        self.outer_attr = set(dir(tk.Widget))
 
-    # all other attributes (_w, children, etc) are passed to self.inner
     def __getattr__(self, item):
-        return getattr(self.inner, item)
+        if item in self.outer_attr:
+            # geometry attributes etc (eg pack, destroy, tkraise) are passed on to self.outer
+            return getattr(self.outer, item)
+        else:
+            # all other attributes (_w, children, etc) are passed to self.inner
+            return getattr(self.inner, item)
 
     def _on_frame_configure(self, event=None):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
