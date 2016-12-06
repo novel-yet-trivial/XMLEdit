@@ -49,7 +49,7 @@ debug = False
 opt_fn = "reader_options.json"
 
 opt = {
-    'dir': r"C:/",
+    'dir': None,
     'geometry': "350x550",
     'save_position': True,
     'MS_format_output': True, # convert output to microsoft-style
@@ -142,9 +142,6 @@ class VerticalScrolledFrame:
 		self.canvas = tk.Canvas(self.outer, highlightthickness=0, **kwargs)
 		self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 		self.canvas['yscrollcommand'] = self.vsb.set
-		# mouse scroll does not seem to work with just "bind"; You have
-		# to use "bind_all". Therefore to use multiple windows you have
-		# to bind_all in the current widget
 		self.canvas.bind("<Enter>", self._bind_mouse)
 		self.canvas.bind("<Leave>", self._unbind_mouse)
 		self.vsb['command'] = self.canvas.yview
@@ -155,20 +152,19 @@ class VerticalScrolledFrame:
 		self.inner.bind("<Configure>", self._on_frame_configure)
 
 		self.outer_attr = set(dir(tk.Widget))
+		self.frames = (self.inner, self.outer)
 
 	def __getattr__(self, item):
-		if item in self.outer_attr:
-			# geometry attributes etc (eg pack, destroy, tkraise) are passed on to self.outer
-			return getattr(self.outer, item)
-		else:
-			# all other attributes (_w, children, etc) are passed to self.inner
-			return getattr(self.inner, item)
+		"""geometry attributes etc (eg pack, destroy, tkraise) are passed on to self.outer
+		all other attributes (_w, children, etc) are passed to self.inner"""
+		return getattr(self.frames[item in self.outer_attr], item)
 
 	def _on_frame_configure(self, event=None):
 		self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
 	def _bind_mouse(self, event=None):
-		"""Linux uses Buttons, Windows/Mac uses MouseWheel"""
+		"""mouse event bind does not work, so this hack allows the use of bind_all
+		Linux uses Buttons, Windows/Mac uses MouseWheel"""
 		for ev in ("<Button-4>", "<Button-5>", "<MouseWheel>"):
 			self.canvas.bind_all(ev, self._on_mousewheel)
 
@@ -242,8 +238,8 @@ class GUI(tk.Frame):
 
         self.top = FilePicker(self, command=self.load_file)
         self.top.pack(fill=tk.X)
-        if opt.get('dir'):
-            self.top.load_dir(opt['dir'])
+
+        self.top.load_dir(opt.get('dir') or os.getcwd())
 
         self.data_frame = tk.Frame(self)
         self.display = VerticalScrolledFrame(self.data_frame)
