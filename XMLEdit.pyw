@@ -48,14 +48,16 @@ debug = False
 # load global options dictionary
 opt_fn = "reader_options.json"
 
+# default options
 opt = {
-    'dir': None,
+    'dir': None, # last seen directory
     'geometry': "350x550",
-    'save_position': True,
-    'MS_format_output': True, # convert output to microsoft-style
+    'save_position': True, # save the geometry and position of the window and restore on next load
+    'MS_format_output': True, # convert output to microsoft .NET style
     'formats': '.config .xml', # extensions of files to be listed; space delimited
     'entrybox_width': 25,  # width of the entry boxes
-    'output_encoding': 'autodetect' # any valid encoding ('utf-8', 'utf-16le', etc) or autodetect.
+    'output_encoding': 'autodetect', # any valid encoding ('utf-8', 'utf-16le', etc) or autodetect.
+    'backup_ext': '.bak', # extension of backed up files. Use something not in 'formats' to prevent backups from showing in the dropdown list.
     }
 
 try:
@@ -313,7 +315,7 @@ class GUI(tk.Frame):
             self.status.set("cannot save - no file loaded")
             return
         name, ext = os.path.splitext(self.fn)
-        bkup_name = name + time.strftime("_%Y-%m-%d_%H-%M-%S") + ext
+        bkup_name = name + time.strftime("_%Y-%m-%d_%H-%M-%S") + ext + opt['backup_ext']
         os.rename(self.fn, bkup_name)
         print(self.fn, "backed up to", bkup_name)
 
@@ -402,6 +404,8 @@ def istag(test):
 
 
 def MSiffy(data):
+    """convert the beautifulsoup prettify output to a microsoft .NET style
+    Basically this means moving the contents of tags into the same line as the tag"""
     hlm = []
     state = False
     leading_spaces = re.compile(r"^\s*")
