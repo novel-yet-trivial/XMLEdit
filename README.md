@@ -14,3 +14,22 @@ Save a file by pressing the "Save" button or "Ctrl-s". The current file is renam
 The program will also open a file given as a command line argument, which means you can associtate this program with .xml files to open them by doubleclick or from the explorer right click menu. 
 
 ![Screenshot](screenshot.png)
+
+## Setup
+
+Prepare dependencies:
+
+```
+$ git clone https://github.com/novel-yet-trivial/XMLEdit
+$ cd XMLEdit
+$ pip install -r requirements.txt
+```
+
+## Execution
+
+Execute XMLEdit:
+
+```
+$ python XMLEdit.pyw
+```
+
